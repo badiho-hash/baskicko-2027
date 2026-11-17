@@ -192,7 +192,7 @@
         <div id="routeMap" aria-label="Interaktivní mapa cesty"></div>
         <div class="card">
           <h3>Jak mapu číst</h3>
-          <p class="small">Každý barevný úsek představuje jeden cestovní den s autem. Klikni na body v mapě a zobrazí se název místa. Na mobilu lze mapu posouvat prstem a přibližovat dvěma prsty.</p>
+          <p class="small">Každý barevný úsek představuje jeden cestovní den s autem. Trasa se nyní načítá po skutečných silnicích. Klikni na body v mapě a zobrazí se název místa. Na mobilu lze mapu posouvat prstem a přibližovat dvěma prsty.</p>
           <div class="legend" style="margin-top:16px">
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d1)"></span> 8. 5. Bilbao → Gaztelugatxe → Mundaka → Zumaia → Getaria</div>
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d2)"></span> 9. 5. Getaria → San Sebastián → Pamplona</div>
@@ -371,6 +371,10 @@
             <strong>17. 11. 2026 — doplněna fotogalerie a mapa trasy</strong>
             <div class="small">Do stránky byly přidány ilustrační fotografie hlavních míst a interaktivní mapa s barevně odlišenými úseky cesty po dnech.</div>
           </div>
+          <div class="update">
+            <strong>17. 11. 2026 — mapa upravena na skutečné silniční trasy</strong>
+            <div class="small">Barevné linky teď sledují skutečné silnice mezi zastávkami. Pokud se routovací služba výjimečně nenačte, stránka dočasně zobrazí náhradní spojnice mezi body.</div>
+          </div>
         </div>
         <p class="small">Při dalších úpravách sem můžeme doplňovat datum a stručný popis změny. Kamarádi pak po otevření stránky hned uvidí, co je nového.</p>
       </div>
@@ -380,7 +384,7 @@
   <footer>
     <div class="wrap footerInner">
       <div>✦ Naše Španělsko 2027</div>
-      <div>Pracovní plán pro 4 kamarády · Naposledy upraveno 17. 11. 2026</div>
+      <div>Pracovní plán pro 4 kamarády · Naposledy upraveno 17. 11. 2026 · verze s trasou po silnicích</div>
     </div>
   </footer>
 
@@ -441,35 +445,80 @@
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
+    const routeGroup = L.featureGroup().addTo(map);
+    const markerGroup = L.featureGroup().addTo(map);
     const allLatLngs = [];
     const usedMarkers = new Set();
 
     daySegments.forEach(seg => {
-      const latlngs = seg.places.map(p => points[p]);
-      latlngs.forEach(ll => allLatLngs.push(ll));
-      L.polyline(latlngs, {
-        color: seg.color,
-        weight: 6,
-        opacity: .92,
-        lineCap: 'round',
-        lineJoin: 'round'
-      }).addTo(map).bindPopup('Trasa dne ' + seg.label);
-
       seg.places.forEach(place => {
+        const ll = points[place];
+        allLatLngs.push(ll);
         if(usedMarkers.has(place)) return;
         usedMarkers.add(place);
-        const marker = L.circleMarker(points[place], {
+        const marker = L.circleMarker(ll, {
           radius: 7,
           color: '#ffffff',
           weight: 2,
           fillColor: seg.color,
           fillOpacity: 1
-        }).addTo(map);
+        }).addTo(markerGroup);
         marker.bindPopup('<strong>' + labels[place] + '</strong>');
       });
     });
 
     map.fitBounds(allLatLngs, {padding:[28,28]});
+
+    function addFallbackLine(seg){
+      const latlngs = seg.places.map(p => points[p]);
+      return L.polyline(latlngs, {
+        color: seg.color,
+        weight: 6,
+        opacity: .85,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: '8 8'
+      }).addTo(routeGroup).bindPopup('Náhradní trasa dne ' + seg.label);
+    }
+
+    async function addRoadRoute(seg){
+      const coords = seg.places.map(p => {
+        const [lat,lng] = points[p];
+        return `${lng},${lat}`;
+      }).join(';');
+
+      const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+
+      try {
+        const response = await fetch(url, {headers:{'Accept':'application/json'}});
+        if(!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if(!data.routes || !data.routes[0] || !data.routes[0].geometry) throw new Error('Bez geometrie');
+
+        const layer = L.geoJSON(data.routes[0].geometry, {
+          style: {
+            color: seg.color,
+            weight: 6,
+            opacity: .92,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }
+        }).addTo(routeGroup);
+        layer.bindPopup(`Trasa dne ${seg.label}`);
+      } catch (error) {
+        console.warn('Nepodařilo se načíst silniční trasu pro den', seg.label, error);
+        addFallbackLine(seg);
+      }
+    }
+
+    Promise.all(daySegments.map(addRoadRoute)).then(() => {
+      const bounds = routeGroup.getBounds();
+      if(bounds.isValid()) {
+        map.fitBounds(bounds.pad(0.08));
+      } else {
+        map.fitBounds(allLatLngs, {padding:[28,28]});
+      }
+    });
   </script>
 </body>
 </html>

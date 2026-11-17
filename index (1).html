@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f5257" />
+  <title>Baskicko 2027 | Náš společný itinerář</title>
+  <meta name="description" content="Společný plán cesty do Baskicka a Monasterio de Piedra, 7.–14. května 2027." />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    :root{
+      --bg:#f7f7f2;
+      --surface:#ffffff;
+      --ink:#17333a;
+      --muted:#61757a;
+      --line:#dfe8e5;
+      --teal:#0f6b6f;
+      --teal-dark:#0b4d51;
+      --sand:#f0d8a2;
+      --accent:#e7f5f2;
+      --shadow:0 16px 36px rgba(15,61,67,.08);
+      --d1:#1b9aaa;
+      --d2:#6c5ce7;
+      --d3:#ff7f50;
+      --d4:#2a9d8f;
+      --d5:#e76f51;
+      --d6:#f4a261;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.62}
+    img{max-width:100%;display:block}
+    a{color:var(--teal)}
+    .wrap{width:min(1160px,calc(100% - 34px));margin:auto}
+
+    .hero{
+      color:#fff;
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(125deg,#103b42 0%,#176d72 62%,#6ea7a0 100%);
+      min-height:460px;
+    }
+    .hero::after{
+      content:"";position:absolute;inset:auto -5% -26% 40%;height:280px;border-radius:50%;border:88px solid rgba(255,255,255,.10);transform:rotate(-11deg)
+    }
+    .top{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:24px 0;position:relative;z-index:1}
+    .brand{font-size:.92rem;font-weight:800;letter-spacing:.12em}
+    .pill{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);font-size:.83rem}
+    .heroInner{padding:56px 0 82px;position:relative;z-index:1}
+    .eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.78rem;font-weight:800;color:#caece4}
+    h1{font-size:clamp(2.7rem,6vw,5.5rem);line-height:1.02;letter-spacing:-.045em;max-width:820px;margin:14px 0 18px}
+    h1 span{color:#f5ddaa}
+    .lead{max-width:700px;font-size:1.1rem;color:#e6f2ef}
+    .facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+    .fact{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.17);font-size:.93rem}
+
+    .nav{position:sticky;top:0;z-index:50;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+    .navInner{display:flex;gap:24px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+    .navInner::-webkit-scrollbar{display:none}
+    .nav a{display:block;padding:15px 0;text-decoration:none;color:var(--teal-dark);font-weight:700;font-size:.92rem}
+
+    main{padding:42px 0 70px}
+    section{scroll-margin-top:90px;margin-bottom:52px}
+    .date{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--teal);margin-bottom:8px}
+    h2{font-size:clamp(1.6rem,3vw,2.25rem);line-height:1.15;letter-spacing:-.03em;margin:0 0 18px}
+    h3{font-size:1.16rem;line-height:1.25;margin:0}
+    .sectionHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .status{display:inline-block;padding:5px 11px;border-radius:999px;background:#fff3dd;color:#8a601e;font-size:.74rem;font-weight:800;white-space:nowrap}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px}
+    .stat b{display:block;font-size:1.35rem;color:var(--teal-dark)}
+    .stat span{font-size:.84rem;color:var(--muted)}
+    .notice{background:#e8f4f1;border-left:4px solid #3d9b8e;border-radius:12px;padding:18px 20px;margin-top:18px}
+    .notice strong{color:#0f5454}
+
+    .mapShell{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:start}
+    #routeMap{height:540px;border-radius:18px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
+    .legend{display:grid;gap:10px}
+    .legendItem{display:flex;align-items:center;gap:10px;font-size:.94rem;color:var(--ink)}
+    .lineSwatch{width:30px;height:6px;border-radius:999px;display:inline-block}
+    .small{font-size:.88rem;color:var(--muted)}
+
+    .gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .photoCard{overflow:hidden;padding:0}
+    .photoCard img{height:220px;width:100%;object-fit:cover}
+    .photoText{padding:16px 17px 18px}
+    .photoText p{margin:.35rem 0 0;color:var(--muted);font-size:.92rem}
+
+    .dayHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .route{font-weight:700;color:#385358;margin:8px 0}
+    .dayText{margin:10px 0 0}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px}
+    .tag{padding:4px 10px;border-radius:999px;background:#edf4f2;color:#49676b;font-size:.78rem}
+    .featured{border:2px solid #7ab9ad;background:#f8fffd}
+    .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+    .link{display:inline-block;padding:8px 12px;border-radius:10px;background:#fff;text-decoration:none;font-size:.87rem;font-weight:700;border:1px solid #b8d7d0}
+    .link:hover{background:#edf8f5}
+    .list{padding-left:20px;margin:0}
+    .list li{margin-bottom:8px}
+    .timeline{border-left:2px solid #b6d4cd;padding-left:24px;margin-left:8px}
+    .update{position:relative;margin:0 0 16px}
+    .update::before{content:"";position:absolute;left:-32px;top:5px;width:12px;height:12px;background:var(--teal);border-radius:50%;border:3px solid var(--bg)}
+    .copyBtn{border:0;border-radius:10px;padding:10px 14px;background:var(--teal-dark);color:#fff;font-weight:700;cursor:pointer}
+    .copyBtn:hover{background:var(--teal)}
+    footer{background:var(--teal-dark);color:#dceceb;padding:28px 0}
+    .footerInner{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .disclaimer{font-size:.81rem;color:var(--muted)}
+
+    @media (max-width: 900px){
+      .mapShell{grid-template-columns:1fr}
+      #routeMap{height:420px}
+      .gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width: 700px){
+      .wrap{width:min(100% - 26px,1160px)}
+      .hero{min-height:390px}
+      .heroInner{padding:44px 0 64px}
+      .lead{font-size:1rem}
+      .grid,.summary,.gallery{grid-template-columns:1fr}
+      .card{padding:19px}
+      .navInner{gap:18px}
+      .nav a{font-size:.84rem}
+      .sectionHead{display:block}
+      .fact{font-size:.84rem;padding:8px 11px}
+      #routeMap{height:360px}
+      .photoCard img{height:205px}
+    }
+    @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="top">
+        <div class="brand">✦ NAŠE ŠPANĚLSKO 2027</div>
+        <div class="pill">SPOLEČNÝ PLÁN · VERZE 2.1</div>
+      </div>
+      <div class="heroInner">
+        <div class="eyebrow">Roadtrip pro čtyři kamarády</div>
+        <h1>Baskicko, pobřeží<br>a <span>vodopády</span> na jedné trase.</h1>
+        <p class="lead">Přehled celé cesty od Bilbaa až po Monasterio de Piedra. Nově s fotkami míst a interaktivní mapou, kde je barevně vyznačeno, kudy pojedeme jednotlivé dny.</p>
+        <div class="facts">
+          <div class="fact">📅 7.–14. května 2027</div>
+          <div class="fact">👥 4 dospělí</div>
+          <div class="fact">🚗 Auto 8.–13. 5.</div>
+          <div class="fact">✈️ Bilbao tam i zpět</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Sekce webu">
+    <div class="wrap navInner">
+      <a href="#prehled">Přehled</a>
+      <a href="#mapa">Mapa trasy</a>
+      <a href="#fotky">Fotky</a>
+      <a href="#program">Program 8 dní</a>
+      <a href="#ubytovani">Ubytování</a>
+      <a href="#zmeny">Co je nového</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section id="prehled">
+      <div class="sectionHead">
+        <div>
+          <div class="date">Kde jsme v plánování</div>
+          <h2>Aktuální přehled</h2>
+        </div>
+        <span class="status">NÁVRH · NEREZERVOVÁNO</span>
+      </div>
+      <div class="summary">
+        <div class="stat"><b>8 dní</b><span>7 nocí na trase</span></div>
+        <div class="stat"><b>4 osoby</b><span>Společná cesta</span></div>
+        <div class="stat"><b>6 dní</b><span>Půjčené auto</span></div>
+        <div class="stat"><b>1 noc</b><span>Nuévalos, 10. 5.</span></div>
+      </div>
+      <div class="notice"><strong>Novinka v trase:</strong> Na pondělí 10. 5. jsme přidali Monasterio de Piedra a přespání v Nuévalos. Kvůli tomu je jeden přejezd delší než původní limit 200 km, ale trasa pořád drží stejný počet dnů a dává logisticky smysl.</div>
+    </section>
+
+    <section id="mapa">
+      <div class="date">Nově přidáno</div>
+      <h2>Mapa cesty s barevnou trasou</h2>
+      <div class="mapShell">
+        <div id="routeMap" aria-label="Interaktivní mapa cesty"></div>
+        <div class="card">
+          <h3>Jak mapu číst</h3>
+          <p class="small">Každý barevný úsek představuje jeden cestovní den s autem. Klikni na body v mapě a zobrazí se název místa. Na mobilu lze mapu posouvat prstem a přibližovat dvěma prsty.</p>
+          <div class="legend" style="margin-top:16px">
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d1)"></span> 8. 5. Bilbao → Gaztelugatxe → Mundaka → Zumaia → Getaria</div>
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d2)"></span> 9. 5. Getaria → San Sebastián → Pamplona</div>
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d3)"></span> 10. 5. Pamplona → Monasterio de Piedra → Nuévalos</div>
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d4)"></span> 11. 5. Nuévalos → Olite</div>
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d5)"></span> 12. 5. Olite → Laguardia</div>
+            <div class="legendItem"><span class="lineSwatch" style="background:var(--d6)"></span> 13. 5. Laguardia → Vitoria-Gasteiz → Bilbao</div>
+          </div>
+          <div class="links">
+            <a class="link" href="https://www.google.com/maps/dir/Bilbao/San+Juan+de+Gaztelugatxe/Mundaka/Zumaia/Getaria/San+Sebastian/Pamplona/Monasterio+de+Piedra/Nuevalos/Olite/Laguardia/Vitoria-Gasteiz/Bilbao/" target="_blank" rel="noopener noreferrer">🗺️ Otevřít v Google Maps ↗</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="fotky">
+      <div class="date">Inspirace k cestě</div>
+      <h2>Fotky hlavních míst</h2>
+      <div class="gallery">
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/GuggenheimBilbao.jpg?width=960" alt="Bilbao a Guggenheimovo muzeum" loading="lazy">
+          <div class="photoText"><h3>Bilbao</h3><p>Start i konec cesty. Město pro první večer, poslední noc i odlet.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:GuggenheimBilbao.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/San%20Juan%20de%20Gaztelugatxe.jpg?width=960" alt="San Juan de Gaztelugatxe" loading="lazy">
+          <div class="photoText"><h3>Gaztelugatxe</h3><p>Skalnatý ostrůvek s ikonickou cestou a výhledy na pobřeží Baskicka.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:San_Juan_de_Gaztelugatxe.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Zumaia%20flysch%201.jpg?width=960" alt="Flysch útesy v Zumaie" loading="lazy">
+          <div class="photoText"><h3>Zumaia</h3><p>Slavné flysch útesy a dramatické mořské panorama.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:Zumaia_flysch_1.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/San%20Sebastian%20-%20La%20Concha.jpg?width=960" alt="San Sebastián a pláž La Concha" loading="lazy">
+          <div class="photoText"><h3>San Sebastián</h3><p>La Concha, staré město a výborné pintxos.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:San_Sebastian_-_La_Concha.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Monasterio%20de%20Piedra%20-%20Cola%20de%20Caballo.jpg?width=960" alt="Vodopád v Monasterio de Piedra" loading="lazy">
+          <div class="photoText"><h3>Monasterio de Piedra</h3><p>Vodopády, jeskynní průchody a hlavní přírodní zastávka celé cesty.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:Monasterio_de_Piedra_-_Cola_de_Caballo.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Palacio%20Real%20de%20Olite.jpg?width=960" alt="Královský palác v Olite" loading="lazy">
+          <div class="photoText"><h3>Olite</h3><p>Historické město a působivý královský palác v Navarře.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:Palacio_Real_de_Olite.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Laguardia%20vi%C3%B1edos.jpg?width=960" alt="Laguardia a vinice Rioja Alavesa" loading="lazy">
+          <div class="photoText"><h3>Laguardia</h3><p>Vinařská oblast Rioja Alavesa a opevněné městečko na kopci.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:Laguardia_vi%C3%B1edos.jpg" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+        <article class="card photoCard">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Plaza%20de%20la%20Virgen%20Blanca%20en%20Vitoria-Gasteiz.JPG?width=960" alt="Vitoria-Gasteiz" loading="lazy">
+          <div class="photoText"><h3>Vitoria-Gasteiz</h3><p>Poslední větší zastávka před návratem do Bilbaa.</p><p class="disclaimer"><a href="https://commons.wikimedia.org/wiki/File:Plaza_de_la_Virgen_Blanca_en_Vitoria-Gasteiz.JPG" target="_blank" rel="noopener noreferrer">Autor a licence fotografie ↗</a></p></div>
+        </article>
+      </div>
+      <p class="disclaimer">Fotografie pocházejí z Wikimedia Commons. U každé fotografie je odkaz na autora a licenční podmínky. Pokud budeš chtít, můžu do další verze doplnit ještě pláže, bary nebo konkrétní tipy na zastávky u každého dne.</p>
+    </section>
+
+    <section id="program">
+      <div class="date">Den po dni</div>
+      <h2>Náš plán cesty</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="date">Pátek 7. května · Den 1</div>
+          <h3>Bilbao</h3>
+          <div class="route">✈️ Přílet a první večer</div>
+          <p class="dayText">Ubytování, procházka Casco Viejo, Plaza Nueva a první pintxos. Bez auta.</p>
+          <div class="tags"><span class="tag">🛏 Bilbao</span><span class="tag">🚶 Bez přejezdu</span></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Sobota 8. května · Den 2</div>
+          <h3>Bilbao → Gaztelugatxe → Mundaka → Zumaia → Getaria</h3>
+          <div class="route">🌊 Pobřeží Baskicka</div>
+          <p class="dayText">Vyzvednutí auta, dramatické pobřeží a rybářská města. Útesy flysch v Zumaie, večer Getaria.</p>
+          <div class="tags"><span class="tag">🛏 Getaria / Zumaia</span><span class="tag">🚗 ~140–170 km</span></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Neděle 9. května · Den 3</div>
+          <h3>Getaria → San Sebastián → Pamplona</h3>
+          <div class="route">🏖️ Pláž, město a pintxos</div>
+          <p class="dayText">La Concha, staré město San Sebastiánu a odpoledne přesun do Pamplony.</p>
+          <div class="tags"><span class="tag">🛏 Pamplona</span><span class="tag">🚗 ~115–135 km</span></div>
+        </article>
+
+        <article class="card featured">
+          <div class="dayHeader">
+            <div>
+              <div class="date">Pondělí 10. května · Den 4</div>
+              <h3>Pamplona → Monasterio de Piedra → Nuévalos</h3>
+            </div>
+            <span class="status">NOVĚ</span>
+          </div>
+          <div class="route">💦 Vodopády a jeskyně</div>
+          <p class="dayText">Ráno odjezd z Pamplony, pak zhruba 3,5–4 hodiny v přírodním parku. Večer přespání v Nuévalos. <strong>Delší přejezd než obvykle.</strong></p>
+          <div class="tags"><span class="tag">🛏 Nuévalos</span><span class="tag">🚗 ~230–240 km</span></div>
+          <div class="links"><a class="link" href="https://monasteriopiedra.com/entradas/" target="_blank" rel="noopener noreferrer">Oficiální vstupenky ↗</a></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Úterý 11. května · Den 5</div>
+          <h3>Nuévalos → Olite</h3>
+          <div class="route">🏰 Královský palác</div>
+          <p class="dayText">Přejezd zpátky do Navarry, středověký palác a historické centrum Olite.</p>
+          <div class="tags"><span class="tag">🛏 Olite</span><span class="tag">🚗 ~195–205 km</span></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Středa 12. května · Den 6</div>
+          <h3>Olite → Laguardia</h3>
+          <div class="route">🍇 Vinice a opevněné město</div>
+          <p class="dayText">Příjemnější den s kratším přejezdem, malebné městečko, případně návštěva vinného sklepa.</p>
+          <div class="tags"><span class="tag">🛏 Laguardia</span><span class="tag">🚗 ~100 km</span></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Čtvrtek 13. května · Den 7</div>
+          <h3>Laguardia → Vitoria-Gasteiz → Bilbao</h3>
+          <div class="route">🏘️ Poslední den s autem</div>
+          <p class="dayText">Prohlídka historického města Vitoria-Gasteiz, návrat do Bilbaa a vrácení auta.</p>
+          <div class="tags"><span class="tag">🛏 Bilbao</span><span class="tag">🚗 ~130–150 km</span></div>
+        </article>
+
+        <article class="card">
+          <div class="date">Pátek 14. května · Den 8</div>
+          <h3>Bilbao → domů</h3>
+          <div class="route">✈️ Odlet</div>
+          <p class="dayText">Snídaně a přesun na letiště podle času odletu.</p>
+          <div class="tags"><span class="tag">🚕 Transfer na letiště</span></div>
+        </article>
+      </div>
+      <p class="disclaimer">Kilometry jsou orientační a budou ještě upřesněny podle konkrétních zastávek a navigace. Celý plán je pracovní návrh.</p>
+    </section>
+
+    <section id="ubytovani">
+      <div class="date">Noclehy</div>
+      <h2>Co potřebujeme zarezervovat</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>📍 Nuévalos · 10.–11. května</h3>
+          <p>Jeden čtyřlůžkový pokoj pro čtyři dospělé. <strong>Rozpočet do 120 € celkem za noc.</strong> Ideálně jednoduchý soukromý penzion, ne hotel ani celý dům.</p>
+          <span class="status">VOLNO A CENA NEOVĚŘENY</span>
+          <div class="links">
+            <a class="link" href="https://www.booking.com/hotel/es/las-rumbas.es.html" target="_blank" rel="noopener noreferrer">Hostal Las Rumbas ↗</a>
+            <a class="link" href="https://www.lagoresort.com/" target="_blank" rel="noopener noreferrer">Lago Resort ↗</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📍 Ostatní noci</h3>
+          <ul class="list">
+            <li>7. 5. Bilbao</li>
+            <li>8. 5. Getaria / Zumaia</li>
+            <li>9. 5. Pamplona</li>
+            <li>11. 5. Olite</li>
+            <li>12. 5. Laguardia</li>
+            <li>13. 5. Bilbao</li>
+          </ul>
+          <p class="small">Konkrétní ubytování a ceny ještě doplníme.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="zmeny">
+      <div class="sectionHead">
+        <div>
+          <div class="date">Změny přehledně</div>
+          <h2>Co je nového</h2>
+        </div>
+        <button class="copyBtn" type="button" onclick="copyLink(this)">🔗 Kopírovat odkaz</button>
+      </div>
+      <div class="card">
+        <div class="timeline">
+          <div class="update">
+            <strong>17. 11. 2026 — první zveřejněný návrh</strong>
+            <div class="small">Zařazeno Monasterio de Piedra na 10. 5. a nocleh v Nuévalos. Přestavěna trasa tak, aby měla 8 dní a končila v Bilbau.</div>
+          </div>
+          <div class="update">
+            <strong>17. 11. 2026 — doplněny fotky a mapa trasy</strong>
+            <div class="small">Do stránky byly přidány ilustrační fotografie hlavních míst a interaktivní mapa s barevně odlišenými úseky cesty po dnech.</div>
+          </div>
+        </div>
+        <p class="small">Při dalších úpravách sem můžeme doplňovat datum a stručný popis změny. Kamarádi pak po otevření stránky hned uvidí, co je nového.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footerInner">
+      <div>✦ Naše Španělsko 2027</div>
+      <div>Pracovní plán pro 4 kamarády · Naposledy upraveno 17. 11. 2026</div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    function copyLink(button){
+      const done = () => button.textContent = 'Odkaz zkopírován ✓';
+      const fail = () => button.textContent = 'Zkopíruj adresu stránky nahoře';
+      if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(location.href).then(done).catch(fail);
+      } else {
+        fail();
+      }
+    }
+
+    const points = {
+      bilbao:[43.2630,-2.9350],
+      gaztelugatxe:[43.4461,-2.7859],
+      mundaka:[43.4072,-2.6985],
+      zumaia:[43.2946,-2.2567],
+      getaria:[43.3036,-2.2044],
+      sansebastian:[43.3183,-1.9812],
+      pamplona:[42.8125,-1.6458],
+      piedra:[41.1958,-1.7822],
+      nuevalos:[41.2136,-1.7897],
+      olite:[42.4819,-1.6517],
+      laguardia:[42.5547,-2.5844],
+      vitoria:[42.8467,-2.6716]
+    };
+
+    const daySegments = [
+      {label:'8. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d1').trim(), places:['bilbao','gaztelugatxe','mundaka','zumaia','getaria']},
+      {label:'9. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d2').trim(), places:['getaria','sansebastian','pamplona']},
+      {label:'10. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d3').trim(), places:['pamplona','piedra','nuevalos']},
+      {label:'11. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d4').trim(), places:['nuevalos','olite']},
+      {label:'12. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d5').trim(), places:['olite','laguardia']},
+      {label:'13. 5.', color:getComputedStyle(document.documentElement).getPropertyValue('--d6').trim(), places:['laguardia','vitoria','bilbao']}
+    ];
+
+    const labels = {
+      bilbao:'Bilbao',
+      gaztelugatxe:'San Juan de Gaztelugatxe',
+      mundaka:'Mundaka',
+      zumaia:'Zumaia',
+      getaria:'Getaria',
+      sansebastian:'San Sebastián',
+      pamplona:'Pamplona',
+      piedra:'Monasterio de Piedra',
+      nuevalos:'Nuévalos',
+      olite:'Olite',
+      laguardia:'Laguardia',
+      vitoria:'Vitoria-Gasteiz'
+    };
+
+    const map = L.map('routeMap', {scrollWheelZoom:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const allLatLngs = [];
+    const usedMarkers = new Set();
+
+    daySegments.forEach(seg => {
+      const latlngs = seg.places.map(p => points[p]);
+      latlngs.forEach(ll => allLatLngs.push(ll));
+      L.polyline(latlngs, {
+        color: seg.color,
+        weight: 6,
+        opacity: .92,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map).bindPopup('Trasa dne ' + seg.label);
+
+      seg.places.forEach(place => {
+        if(usedMarkers.has(place)) return;
+        usedMarkers.add(place);
+        const marker = L.circleMarker(points[place], {
+          radius: 7,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: seg.color,
+          fillOpacity: 1
+        }).addTo(map);
+        marker.bindPopup('<strong>' + labels[place] + '</strong>');
+      });
+    });
+
+    map.fitBounds(allLatLngs, {padding:[28,28]});
+  </script>
+</body>
+</html>

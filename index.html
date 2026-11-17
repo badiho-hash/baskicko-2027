@@ -83,6 +83,19 @@
     .mapShell{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:start}
     #routeMap{height:540px;border-radius:18px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
     .legend{display:grid;gap:10px}
+    .routeFilters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:17px 0}
+    .routeFilter{border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;color:var(--ink);text-align:left;cursor:pointer;font:inherit;font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:8px;min-height:48px;transition:background .15s,border-color .15s}
+    .routeFilter:hover{border-color:var(--teal)}
+    .routeFilter[aria-pressed="true"]{background:#dff2ed;border:2px solid var(--teal);padding:10px 11px}
+    .routeFilter.all{grid-column:1/-1;justify-content:center}
+    .routeDot{width:11px;height:11px;border-radius:50%;flex:none}
+    .mapActions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+    .mapAction{padding:9px 12px;border:1px solid #b8d7d0;border-radius:10px;background:#fff;color:var(--teal-dark);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+    .mapAction:hover{background:#edf8f5}
+    .mapStatus{background:var(--accent);border-radius:12px;padding:11px 13px;font-size:.87rem;line-height:1.5;min-height:66px}
+    .mapStatus strong{display:block}
+    .routeLinks a{margin-top:8px}
+    .mapHelp{font-size:.78rem;color:var(--muted)}
     .legendItem{display:flex;align-items:center;gap:10px;font-size:.94rem;color:var(--ink)}
     .lineSwatch{width:30px;height:6px;border-radius:999px;display:inline-block}
     .small{font-size:.88rem;color:var(--muted)}
@@ -140,7 +153,7 @@
     <div class="wrap">
       <div class="top">
         <div class="brand">✦ NAŠE ŠPANĚLSKO 2027</div>
-        <div class="pill">SPOLEČNÝ PLÁN · VERZE 2.2.1</div>
+        <div class="pill">SPOLEČNÝ PLÁN · VERZE 3.2.1</div>
       </div>
       <div class="heroInner">
         <div class="eyebrow">Roadtrip pro čtyři kamarády</div>
@@ -189,10 +202,29 @@
       <div class="date">Nově přidáno</div>
       <h2>Mapa cesty s barevnou trasou</h2>
       <div class="mapShell">
-        <div id="routeMap" aria-label="Interaktivní mapa cesty"></div>
+        <div>
+          <div id="routeMap" aria-label="Interaktivní mapa cesty" role="region"></div>
+          <div class="mapActions">
+            <button class="mapAction" type="button" id="fitRoute">⌖ Přiblížit vybranou trasu</button>
+            <button class="mapAction" type="button" id="resetRoute">↺ Zobrazit celou cestu</button>
+          </div>
+          <div class="mapHelp">Na mobilu: přibližuj mapu dvěma prsty. V nabídce napravo vyber den a mapa se sama přizpůsobí jeho trase.</div>
+        </div>
         <div class="card">
-          <h3>Jak mapu číst</h3>
-          <p class="small">Každý barevný úsek představuje jeden cestovní den s autem. Trasa se nyní načítá po skutečných silnicích. Klikni na body v mapě a zobrazí se název místa. Na mobilu lze mapu posouvat prstem a přibližovat dvěma prsty.</p>
+          <h3>Vyber den cesty</h3>
+          <p class="small">Klikni na datum – na mapě zůstane jen vybraný úsek po silnicích. Zvolený den se automaticky přiblíží.</p>
+          <div class="routeFilters" id="routeFilters" aria-label="Filtr dnů trasy">
+            <button class="routeFilter all" type="button" data-day="all" aria-pressed="true">🌍 Celá cesta · 8.–13. 5.</button>
+            <button class="routeFilter" type="button" data-day="0" aria-pressed="false"><i class="routeDot" style="background:var(--d1)"></i>So 8. 5.</button>
+            <button class="routeFilter" type="button" data-day="1" aria-pressed="false"><i class="routeDot" style="background:var(--d2)"></i>Ne 9. 5.</button>
+            <button class="routeFilter" type="button" data-day="2" aria-pressed="false"><i class="routeDot" style="background:var(--d3)"></i>Po 10. 5.</button>
+            <button class="routeFilter" type="button" data-day="3" aria-pressed="false"><i class="routeDot" style="background:var(--d4)"></i>Út 11. 5.</button>
+            <button class="routeFilter" type="button" data-day="4" aria-pressed="false"><i class="routeDot" style="background:var(--d5)"></i>St 12. 5.</button>
+            <button class="routeFilter" type="button" data-day="5" aria-pressed="false"><i class="routeDot" style="background:var(--d6)"></i>Čt 13. 5.</button>
+          </div>
+          <div id="selectedRoute" class="mapStatus" aria-live="polite"><strong>Celá cesta</strong>Všechny barevné trasy v jednom přehledu.</div>
+          <div class="routeLinks"><a class="link" id="dayGoogleLink" href="https://www.google.com/maps/dir/Bilbao/San+Juan+de+Gaztelugatxe/Mundaka/Zumaia/Getaria/San+Sebastian/Pamplona/Monasterio+de+Piedra/Nuevalos/Olite/Laguardia/Vitoria-Gasteiz/Bilbao/" target="_blank" rel="noopener noreferrer">🗺️ Otevřít trasu v Google Maps ↗</a></div>
+          <h3 style="margin-top:23px">Barevné úseky</h3>
           <div class="legend" style="margin-top:16px">
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d1)"></span> 8. 5. Bilbao → Gaztelugatxe → Mundaka → Zumaia → Getaria</div>
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d2)"></span> 9. 5. Getaria → San Sebastián → Pamplona</div>
@@ -200,9 +232,6 @@
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d4)"></span> 11. 5. Nuévalos → Olite</div>
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d5)"></span> 12. 5. Olite → Laguardia</div>
             <div class="legendItem"><span class="lineSwatch" style="background:var(--d6)"></span> 13. 5. Laguardia → Vitoria-Gasteiz → Bilbao</div>
-          </div>
-          <div class="links">
-            <a class="link" href="https://www.google.com/maps/dir/Bilbao/San+Juan+de+Gaztelugatxe/Mundaka/Zumaia/Getaria/San+Sebastian/Pamplona/Monasterio+de+Piedra/Nuevalos/Olite/Laguardia/Vitoria-Gasteiz/Bilbao/" target="_blank" rel="noopener noreferrer">🗺️ Otevřít v Google Maps ↗</a>
           </div>
         </div>
       </div>
@@ -372,6 +401,10 @@
             <div class="small">Do stránky byly přidány ilustrační fotografie hlavních míst a interaktivní mapa s barevně odlišenými úseky cesty po dnech.</div>
           </div>
           <div class="update">
+            <strong>17. 11. 2026 — přidáno pohodlnější ovládání mapy</strong>
+            <div class="small">Výběr konkrétního dne, přiblížení trasy, návrat na celou cestu a samostatná navigace pro každý den.</div>
+          </div>
+          <div class="update">
             <strong>17. 11. 2026 — mapa upravena na skutečné silniční trasy</strong>
             <div class="small">Barevné linky teď sledují skutečné silnice mezi zastávkami. Pokud se routovací služba výjimečně nenačte, stránka dočasně zobrazí náhradní spojnice mezi body.</div>
           </div>
@@ -384,7 +417,7 @@
   <footer>
     <div class="wrap footerInner">
       <div>✦ Naše Španělsko 2027</div>
-      <div>Pracovní plán pro 4 kamarády · Naposledy upraveno 17. 11. 2026 · verze s trasou po silnicích</div>
+      <div>Pracovní plán pro 4 kamarády · Naposledy upraveno 17. 11. 2026 · verze s ovládáním mapy</div>
     </div>
   </footer>
 
@@ -439,86 +472,124 @@
       vitoria:'Vitoria-Gasteiz'
     };
 
-    const map = L.map('routeMap', {scrollWheelZoom:true});
+    const isMobile = matchMedia('(max-width: 700px)').matches;
+    const map = L.map('routeMap', {scrollWheelZoom: !isMobile, zoomControl:true});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    const routeGroup = L.featureGroup().addTo(map);
-    const markerGroup = L.featureGroup().addTo(map);
-    const allLatLngs = [];
-    const usedMarkers = new Set();
+    const allLatLngs = daySegments.flatMap(seg => seg.places.map(p => points[p]));
+    const fullBounds = L.latLngBounds(allLatLngs);
+    const routeLayers = new Array(daySegments.length).fill(null);
+    const markerLayers = new Map();
+    let selectedDay = 'all';
+    const selectedRouteEl = document.getElementById('selectedRoute');
+    const dayLinkEl = document.getElementById('dayGoogleLink');
+    const fullGoogleLink = dayLinkEl.href;
 
-    daySegments.forEach(seg => {
-      seg.places.forEach(place => {
-        const ll = points[place];
-        allLatLngs.push(ll);
-        if(usedMarkers.has(place)) return;
-        usedMarkers.add(place);
-        const marker = L.circleMarker(ll, {
-          radius: 7,
-          color: '#ffffff',
-          weight: 2,
-          fillColor: seg.color,
-          fillOpacity: 1
-        }).addTo(markerGroup);
-        marker.bindPopup('<strong>' + labels[place] + '</strong>');
-      });
+    const dayDescriptions = [
+      'Bilbao → Gaztelugatxe → Mundaka → Zumaia → Getaria',
+      'Getaria → San Sebastián → Pamplona',
+      'Pamplona → Monasterio de Piedra → Nuévalos',
+      'Nuévalos → Olite',
+      'Olite → Laguardia',
+      'Laguardia → Vitoria-Gasteiz → Bilbao'
+    ];
+
+    Object.keys(points).forEach(place => {
+      const seg = daySegments.find(s => s.places.includes(place));
+      const marker = L.circleMarker(points[place], {
+        radius: 7,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: seg.color,
+        fillOpacity: 1
+      }).bindPopup('<strong>' + labels[place] + '</strong>');
+      markerLayers.set(place,marker);
     });
 
-    map.fitBounds(allLatLngs, {padding:[28,28]});
-
     function addFallbackLine(seg){
-      const latlngs = seg.places.map(p => points[p]);
-      return L.polyline(latlngs, {
-        color: seg.color,
-        weight: 6,
-        opacity: .85,
-        lineCap: 'round',
-        lineJoin: 'round',
-        dashArray: '8 8'
-      }).addTo(routeGroup).bindPopup('Náhradní trasa dne ' + seg.label);
+      return L.polyline(seg.places.map(p => points[p]), {
+        color:seg.color, weight:6, opacity:.85, dashArray:'8 8', lineCap:'round'
+      }).bindPopup('Dočasná spojnice – silniční trasa dne ' + seg.label + ' se nenačetla');
     }
 
-    async function addRoadRoute(seg){
+    function showSelection(zoom=true){
+      const all = selectedDay === 'all';
+      const activeIndex = all ? -1 : Number(selectedDay);
+      routeLayers.forEach((layer,index) => {
+        if(!layer) return;
+        if(all || index===activeIndex){if(!map.hasLayer(layer)) layer.addTo(map);}
+        else if(map.hasLayer(layer)) map.removeLayer(layer);
+      });
+      const visiblePlaces = all ? new Set(Object.keys(points)) : new Set(daySegments[activeIndex].places);
+      markerLayers.forEach((marker,place) => {
+        if(visiblePlaces.has(place)){if(!map.hasLayer(marker)) marker.addTo(map);}
+        else if(map.hasLayer(marker)) map.removeLayer(marker);
+      });
+      document.querySelectorAll('[data-day]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.day===selectedDay));
+      });
+      if(all){
+        selectedRouteEl.innerHTML='<strong>Celá cesta</strong>Všechny barevné silniční trasy od 8. do 13. května.';
+        dayLinkEl.href=fullGoogleLink;
+        dayLinkEl.textContent='🗺️ Otevřít celou trasu v Google Maps ↗';
+      }else{
+        const seg=daySegments[activeIndex];
+        const fallback=routeLayers[activeIndex] && routeLayers[activeIndex].options && routeLayers[activeIndex].options.dashArray;
+        selectedRouteEl.innerHTML='<strong>'+seg.label+' – den '+(activeIndex+2)+'</strong>'+dayDescriptions[activeIndex]+(fallback?' · Dočasně náhradní spojnice.':'');
+        const stops=seg.places.map(key => points[key].join(','));
+        dayLinkEl.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(stops[0])+'&destination='+encodeURIComponent(stops[stops.length-1])+'&waypoints='+encodeURIComponent(stops.slice(1,-1).join('|'))+'&travelmode=driving';
+        dayLinkEl.textContent='🚗 Navigace pro '+seg.label+' v Google Maps ↗';
+      }
+      if(zoom){
+        let bounds;
+        if(all) bounds=fullBounds;
+        else {
+          const layer=routeLayers[activeIndex];
+          bounds=layer && layer.getBounds ? layer.getBounds() : L.latLngBounds(daySegments[activeIndex].places.map(p=>points[p]));
+        }
+        if(bounds.isValid()) map.fitBounds(bounds.pad(.12),{animate:true,maxZoom:12});
+      }
+    }
+
+    document.querySelectorAll('[data-day]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        selectedDay=button.dataset.day;
+        showSelection(true);
+      });
+    });
+    document.getElementById('fitRoute').addEventListener('click',()=>showSelection(true));
+    document.getElementById('resetRoute').addEventListener('click',()=>{
+      selectedDay='all';showSelection(true);
+    });
+    showSelection(true);
+
+    async function addRoadRoute(seg,index){
       const coords = seg.places.map(p => {
         const [lat,lng] = points[p];
         return `${lng},${lat}`;
       }).join(';');
-
-      const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
-
-      try {
-        const response = await fetch(url, {headers:{'Accept':'application/json'}});
-        if(!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        if(!data.routes || !data.routes[0] || !data.routes[0].geometry) throw new Error('Bez geometrie');
-
-        const layer = L.geoJSON(data.routes[0].geometry, {
-          style: {
-            color: seg.color,
-            weight: 6,
-            opacity: .92,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }
-        }).addTo(routeGroup);
-        layer.bindPopup(`Trasa dne ${seg.label}`);
-      } catch (error) {
-        console.warn('Nepodařilo se načíst silniční trasu pro den', seg.label, error);
-        addFallbackLine(seg);
+      const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+      try{
+        const response=await fetch(url,{headers:{Accept:'application/json'}});
+        if(!response.ok) throw Error('HTTP '+response.status);
+        const data=await response.json();
+        if(data.code!=='Ok' || !data.routes?.[0]?.geometry) throw Error('Bez silniční geometrie');
+        routeLayers[index]=L.geoJSON(data.routes[0].geometry,{
+          style:{color:seg.color,weight:6,opacity:.92,lineCap:'round',lineJoin:'round'}
+        }).bindPopup('Silniční trasa '+seg.label);
+      }catch(error){
+        console.warn('Silniční trasa se nenačetla:',seg.label,error);
+        routeLayers[index]=addFallbackLine(seg);
       }
+      // Vykresluj jen aktuální výběr, i když data dorazí v jiném pořadí.
+      showSelection(false);
     }
 
-    Promise.all(daySegments.map(addRoadRoute)).then(() => {
-      const bounds = routeGroup.getBounds();
-      if(bounds.isValid()) {
-        map.fitBounds(bounds.pad(0.08));
-      } else {
-        map.fitBounds(allLatLngs, {padding:[28,28]});
-      }
-    });
+    Promise.all(daySegments.map(addRoadRoute)).then(()=>showSelection(true));
+
   </script>
 </body>
 </html>
